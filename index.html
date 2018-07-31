@@ -2,9 +2,189 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>D3 Assignment</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	
+	<title>D3 Maps</title>
+	
+	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+
+	<script src="assets/js/jquery-3.2.1.min.js"></script>
+	<script src="assets/js/d3.min.js" ></script>
+	<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+
 </head>
 <body>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2 mb-4 card-shadow" id="map">
+				<h1>Map of Nepal</h1>
+				<hr>
+			</div>	
+		</div>
 
+		<div class="row">
+			<div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2 col-xl-6 offset-xl-3" id="charts">
+				<div class="card card-shadow mb-3">
+					<div class="card-body">
+						<h4 class="card-title">Gender Distribution</h4>
+						<div class="row">
+							<div class="col-4">
+								<p class="lead mb-1" id="male">Male: </p>
+							</div>
+							<div class="col-4">
+								<p class="lead mb-1" id="female">Female: </p>
+							</div>
+							<div class="col-4">
+								<p class="lead mb-1" id="other">Other: </p>
+							</div>
+						</div>
+						<hr>
+						<div class="mb-2" id="chart"> </div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2 col-xl-6 offset-xl-3" id="description">
+				<div class="card card-shadow mb-3">
+					<div class="card-body">
+						<h4 class="card-title">Migrated Out of Country</h4>
+						<div class="row">
+							<div class="col-4">
+								<p class="lead mb-1" id="migratedMale">Male: </p>
+							</div>
+							<div class="col-4">
+								<p class="lead mb-1" id="migratedFemale">Female: </p>
+							</div>
+							<div class="col-4">
+								<p class="lead mb-1" id="migratedOther">Other: </p>
+							</div>
+						</div>
+						<hr>
+						<h5 class="mb-2" id="total">Total: </h5>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var width = $("#map").width();
+		var height = $("#map").height();
+		var migrationFromEachDistrict = {};
+
+		var canvasMap = d3.select("#map")
+					.append("svg")
+					.attr("width", width)
+					.attr("height", height);
+
+		d3.json("assets/data/district.geojson").then(function(data) {
+			var group = canvasMap.selectAll("g")
+						.data([data.features])
+						.enter()
+							.append("g");
+
+			var projection = d3.geoMercator()
+							.center([85.33, 27.70])
+							.rotate([13.65, -23, -0.4])
+							.translate([width / 2, height / 1.8])
+							.scale(5700);
+
+			var path = d3.geoPath()
+						.projection(projection)(data);
+
+			var district = group.append("path")
+							.attr("d", path)
+							.attr("class", "district")
+							.attr("stroke", "white")
+							.attr("fill", "steelBlue");
+		});
+
+		d3.csv("assets/data/assignmentKtm.csv").then(function(data) {
+			var male = 0;
+			var female = 0;
+			var others = 0;
+			var migratedMale = 0;
+			var migratedFemale = 0;
+			var migratedOthers = 0;
+			var totalMigrated;
+
+			for (var i = data.length - 1; i >= 0; i--) {
+				if(data[i].Gender == "male") {
+					male++;
+					if(data[i].IsInNepal == "No") {
+						migratedMale++;
+					}
+				} else if(data[i].Gender == "female"){
+					female++;
+					if(data[i].IsInNepal == "No") {
+						migratedFemale++;
+					}
+				} else {
+					others++;
+					if(data[i].IsInNepal == "No") {
+						migratedOthers++;
+					}
+				}
+				
+				if(data[i].IsInNepal == "No") {
+					if(data[i].District in migrationFromEachDistrict) {
+						migrationFromEachDistrict[data[i].District]++;
+					} else {
+						migrationFromEachDistrict[data[i].District] = 1;
+					}
+				}
+			}
+
+			totalMigrated = migratedMale + migratedFemale + migratedOthers;
+
+			d3.select("#migratedMale").text("Male: " + migratedMale);
+			d3.select("#migratedFemale").text("Female: " + migratedFemale);
+			d3.select("#migratedOther").text("Other: " + migratedOthers);
+			d3.select("#total").text("Total: " + totalMigrated);
+
+			d3.select("#male").text("Male: " + male);
+			d3.select("#female").text("Female: " + female);
+			d3.select("#other").text("Other: " + others);
+			d3.select("#total").text("Total: " + totalMigrated);
+
+			var radius = 100;
+
+			var colors = d3.scaleOrdinal(["#6D78AD", "#51CDA0", "#DF7970", "#4C9CA0", "#AE7D99", "#C9D45C"]);
+
+			var canvasChart = d3.select("#chart")
+						.append("svg")
+						.attr("height", 200)
+						.attr("width", 200)
+						.append("g")
+						.attr("transform", "translate(" + radius + "," + radius + ")");
+
+			// Generates arc that contributes for a pie
+			var arc = d3.arc()
+					.innerRadius(50) // For pie make it 0
+					.outerRadius(radius);
+
+			var pieLayout = d3.pie()
+							.value(function(d) { return d; })([male, female, others]);
+
+			var arcs = canvasChart.selectAll(".arc")
+						.data(pieLayout)
+						.enter()
+							.append("g")
+							.attr("class", "arc");
+
+			var doughnut = arcs.append("path")
+							.attr("d", arc)
+							.attr("fill", function(d, i) { return colors(i); });
+
+			var labels = arcs.append("text")
+						.text(function(d) { return d.data; })
+						.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"})
+						.attr("text-anchor", "middle")
+						.attr("text-size", "2em")
+						.attr("fill", "#fff");
+		})
+	</script>
 </body>
 </html>
