@@ -24,7 +24,7 @@
 		</div>
 
 		<div class="row">
-			<div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2 col-xl-6 offset-xl-3" id="charts">
+			<div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2" id="charts">
 				<div class="card card-shadow mb-3">
 					<div class="card-body">
 						<h4 class="card-title">Gender Distribution</h4>
@@ -163,7 +163,7 @@
 		d3.json("assets/data/district.geojson").then(function(data) {
 			var canvasMap = d3.select("#map")
 					.append("svg")
-					.attr("width", Math.max(900, width))
+					.attr("width", Math.max(800, width))
 					.attr("height", height);
 
 			var toolTip = d3.select("body")
@@ -209,17 +209,18 @@
 				var textAppend = (migrationFromEachDistrict[toolTipText] !== undefined) ? ("<hr class='sep'> Migrated: " + migrationFromEachDistrict[toolTipText]) : "";
 
 				toolTipText+= textAppend;
+
 				if (d3.select(this).classed('district')) {
 					toolTip
 						.classed("invisible", false)
-						.attr("style", "left:"+(mouse[0]+leftPosition)+"px;top:"+(mouse[1]+20)+"px")
-						.html(toolTipText)
+						.attr("style", "left:"+(mouse[0]+leftPosition+"px;top:"+(mouse[1]+20)+"px"))
+						.html(toolTipText);
 				}
 			};
 
 			function updateFill(d){
 				if (d3.select(this).classed('district')) {
-					d3.select(this).style("fill", "#ffa")
+					d3.select(this).style("fill", "#bae4fd")
 				}
 			}
 
