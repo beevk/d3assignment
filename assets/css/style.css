@@ -31,14 +31,16 @@
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 	cursor: pointer;
-	width: 960px;
-	height: 500px;
+	/*width: 960px;
+	height: 500px;*/
+	overflow-x: auto;
+	overflow-y: hidden;
+
 }
 
 #map {
-	overflow-x: auto;
-	overflow-y: hidden;
 }
+
 .background {
 	fill: none;
 	pointer-events: all;
@@ -62,7 +64,7 @@ pre.prettyprint {
 	padding: 9.5px;
 }
 
-div.toolTip  {
+div.tooltip  {
 	color: #222; 
 	background: #fff;
 	padding: .5em;
@@ -73,7 +75,9 @@ div.toolTip  {
 	position: absolute; 
 }
 
-div.toolTip .sep {
+div.tooltip .sep {
 	color: #444;
 	font-weight: 300;
+	margin-top: 0;
+	margin-bottom: 0;
 }

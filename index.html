@@ -71,35 +71,9 @@
 	</div>
 	<script type="text/javascript">
 		var width = $("#map").width();
-		var height = $("#map").height();
+		var leftPosition = $("#map").offset().left;
+		var height = 320;
 		var migrationFromEachDistrict = {};
-
-		var canvasMap = d3.select("#map")
-					.append("svg")
-					.attr("width", width)
-					.attr("height", height);
-
-		d3.json("assets/data/district.geojson").then(function(data) {
-			var group = canvasMap.selectAll("g")
-						.data([data.features])
-						.enter()
-							.append("g");
-
-			var projection = d3.geoMercator()
-							.center([85.33, 27.70])
-							.rotate([13.65, -23, -0.4])
-							.translate([width / 2, height / 1.8])
-							.scale(5700);
-
-			var path = d3.geoPath()
-						.projection(projection)(data);
-
-			var district = group.append("path")
-							.attr("d", path)
-							.attr("class", "district")
-							.attr("stroke", "white")
-							.attr("fill", "steelBlue");
-		});
 
 		d3.csv("assets/data/assignmentKtm.csv").then(function(data) {
 			var male = 0;
@@ -129,7 +103,7 @@
 				}
 				
 				if(data[i].IsInNepal == "No") {
-					if(data[i].District in migrationFromEachDistrict) {
+					if(migrationFromEachDistrict[data[i].District] !== undefined) {
 						migrationFromEachDistrict[data[i].District]++;
 					} else {
 						migrationFromEachDistrict[data[i].District] = 1;
@@ -185,6 +159,80 @@
 						.attr("text-size", "2em")
 						.attr("fill", "#fff");
 		})
+
+		d3.json("assets/data/district.geojson").then(function(data) {
+			var canvasMap = d3.select("#map")
+					.append("svg")
+					.attr("width", Math.max(900, width))
+					.attr("height", height);
+
+			var toolTip = d3.select("body")
+							.append("div")
+							.attr("class", "tooltip");
+
+			var group = canvasMap.append("g")
+						.attr("id", "country");
+
+			var projection = d3.geoMercator()
+							.center([85.33, 27.70])
+							.rotate([13.65, -23, -0.4])
+							.translate([width / 2, height / 1.4])
+							.scale(5700);
+
+			var path = d3.geoPath()
+						.projection(projection);
+
+			var district = group.append("g")
+							.attr("id", "districts")
+							.selectAll("path")
+							.data(data.features)
+							.enter()
+								.append("path")
+								.attr("d", path)
+								.attr("class", "district active")
+								.attr("id", function(d) {
+									return d['properties']['NAME_3'];
+								})
+								.attr("stroke", "white")
+								.attr("fill", "steelBlue")
+								.on("mousemove", updateTooltip)
+								.on("mouseover", updateFill)
+								.on("mouseout", hideTooltip);
+
+
+			function updateTooltip(d) {
+				console.log(leftPosition);
+				//Returns mouse co-ordinates
+				var mouse = d3.mouse(canvasMap.node()).map( function(d) { return parseInt(d); });
+
+				var toolTipText = d.properties["NAME_3"];
+				var textAppend = (migrationFromEachDistrict[toolTipText] !== undefined) ? ("<hr class='sep'> Migrated: " + migrationFromEachDistrict[toolTipText]) : "";
+
+				toolTipText+= textAppend;
+				if (d3.select(this).classed('district')) {
+					toolTip
+						.classed("invisible", false)
+						.attr("style", "left:"+(mouse[0]+leftPosition)+"px;top:"+(mouse[1]+20)+"px")
+						.html(toolTipText)
+				}
+			};
+
+			function updateFill(d){
+				if (d3.select(this).classed('district')) {
+					d3.select(this).style("fill", "#ffa")
+				}
+			}
+
+			function hideTooltip(d){
+				toolTip.classed("invisible", true);
+				d3.select(this).style("fill", "steelBlue")
+			};
+
+			$(window).resize(function() {
+				leftPosition = $("#map" ).offset().left;
+			});
+		});
+		
 	</script>
 </body>
 </html>
